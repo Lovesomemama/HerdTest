@@ -1,82 +1,81 @@
-import 'dart:math';
-
 import 'package:test/test.dart';
-class Action{
-  String name;
-  int id;
+class Event {
+  num id;
   String description;
-  DateTime startTime;
-  DateTime nextTime;
-  Action(this.name,this.id,this.description,this.startTime);
-
+  DateTime date;
+  Event(this.id, this.description, this.date);
 }
 
 
-class Actions{
-  List <Action>acts;
-  Actions():
-      acts = [];
-
-  void addAction(Action someAction) {
-    acts.add(someAction);
+class Events {
+  List <Event>eventsList;
+  Events():
+  eventsList = [];
+  void myAdd(Event someEvent) {
+    eventsList.add(someEvent);
   }
 
-  int get numberOfActions => acts.length;
+  int myTotal() {
+    return eventsList.length;
+  }
 
-  getListActions(bool ask,num offset,num limit){
-    var res = <Action>[];
-    res.addAll(acts);
-    if (ask == true){
-      res.sort((a, b) => a.startTime.compareTo(b.startTime));
-      return res.getRange(offset,offset + limit);
-    } else {
-      res.sort((a, b) => b.startTime.compareTo(a.startTime));
-      return res.getRange(offset,offset + limit);
+  mySortList(bool ask, num offset, num limit) {
+    var someEvents = <Event>[];
+    someEvents.addAll(eventsList);
+    someEvents.sort((a,b) => a.date.compareTo(b.date));
+    if (ask == true) {
+    return someEvents.getRange(offset,offset + limit);
     }
+    else {
+    return someEvents.reversed.toList().getRange(offset,offset + limit);
+   }
   }
 
-  Action getActionById(int someId){
-    return acts.firstWhere((i) => i.id == someId);
+  Event myReturnById(int someid) {
+    return eventsList.firstWhere((i) => i.id == someid); 
   }
 
-  void delActionById(int someId){
-    var actionIndex = acts.lastIndexWhere((i) => i.id == someId);
-    acts.removeAt(actionIndex);
+  void myRemoveById(int someid) {
+    var indexOfEvents = eventsList.lastIndexWhere((i) => i.id == someid);
+    eventsList.removeAt(indexOfEvents);
   }
 }
-
-void main(){
-  var vdnx = Action('VDNX',121,'interesting',DateTime(2019,6,21));
-  var fue = Action('Festival ulichoi edi',122,'tasty',DateTime(2019,6,10));
-  var vinefestival = Action('Festival of wine',123,'alcoholic',DateTime(2019,5,25));
-  var raceOfNations = Action('Race Of Nations',124,'sport',DateTime(2019,5,30));
-  var festi = Actions();
-  test("check add method",(){  
-      // Arrange 
-      festi.addAction(vdnx);
-      bool expected = true;
-      var a = festi.acts.firstWhere((i) => i == vdnx,orElse:() => null); 
-      if (a == null){
-        expected = false;
+void main() {
+  var kurazhBazar = Event(456,'Book exhibition',DateTime(2019,2,29));
+  var galeryKaras = Event(000,'Photo Studio',DateTime(2019,10,6));
+  var act = Events();
+  act.myAdd(kurazhBazar);
+  act.myAdd(galeryKaras);
+  for (var i in act.mySortList(false, 1, 2)){
+    print(i.id);
+  }
+  test("test for myAdd",(){
+    var artCentre = Event(123,'Gallery',DateTime(2019,5,12));
+    act.myAdd(artCentre);
+    bool a = false;
+    for (var i in act.eventsList){
+      if (i == artCentre){
+        a = true;
       }
-      // Act 
-      var actual = true;
-      // Asset 
-      expect(actual,expected); 
-   });
-   test("check number of actions",(){
-     bool expected = festi.numberOfActions == festi.acts.length;
-     bool actual = true;
-     expect(actual,expected);
-
-   }); 
-   test("check getListActions with 0 length",(){
-     var testfesti = Actions();
-     bool expected = testfesti.getListActions(true,0,0).length == 0;
-     var actual = true;
-     expect(actual,expected);
-
-   });
-
-
+    }
+    expect(true,a);
+  });
+  test("test for myTotal",(){
+    expect(act.eventsList.length,act.myTotal());
+  });
+  test("test for mySortList",(){
+    List a = [];
+    expect(a,act.mySortList(true, 0, 0));
+  });
+  test("test for myReturnById",(){
+   var buhtaFoodStation = Event(991,'Food',DateTime(2019,7,10));
+   act.myAdd(buhtaFoodStation);
+   bool a = false;
+   for(var i in act.eventsList){
+     if (i.id == buhtaFoodStation.id){
+       a = true;
+      }
+    }
+  expect(true,a); 
+  });
 }
