@@ -1,81 +1,164 @@
-import 'package:test/test.dart';
-class Event {
-  num id;
+import 'dart:io';
+import 'dart:math';
+import 'package:date_utils/date_utils.dart';
+class Action{
+  String name;
+  int id;
   String description;
-  DateTime date;
-  Event(this.id, this.description, this.date);
+  int daysCounter;
+  DateTime startTime;
+  Action(this.name,this.id,this.description,this.daysCounter,this.startTime);
 }
 
 
-class Events {
-  List <Event>eventsList;
-  Events():
-  eventsList = [];
-  void myAdd(Event someEvent) {
-    eventsList.add(someEvent);
-  }
+class Actions{
+  List <Action>acts;
+  Actions():
+      acts = [];
+      List everyDayActs = <Action> [];
+      List singleActs = <Action>[];
+      List notEveryDayActs = <Action>[];
+      
+  void addAction(Action someAction) {
+    acts.add(someAction);
+    if (someAction.daysCounter > 1){
+      notEveryDayActs.add(someAction);
+    } else if (someAction.daysCounter == 1) {
+      everyDayActs.add(someAction);
 
-  int myTotal() {
-    return eventsList.length;
-  }
-
-  mySortList(bool ask, num offset, num limit) {
-    var someEvents = <Event>[];
-    someEvents.addAll(eventsList);
-    someEvents.sort((a,b) => a.date.compareTo(b.date));
-    if (ask == true) {
-    return someEvents.getRange(offset,offset + limit);
     }
     else {
-    return someEvents.reversed.toList().getRange(offset,offset + limit);
-   }
+      singleActs.add(someAction);
+    }
   }
 
-  Event myReturnById(int someid) {
-    return eventsList.firstWhere((i) => i.id == someid); 
+  int get numberOfActions => acts.length;
+  sortir(List someList){
+    someList.sort((a, b) => a.startTime.compareTo(b.startTime));
+    return someList;
   }
 
-  void myRemoveById(int someid) {
-    var indexOfEvents = eventsList.lastIndexWhere((i) => i.id == someid);
-    eventsList.removeAt(indexOfEvents);
-  }
-}
-void main() {
-  var kurazhBazar = Event(456,'Book exhibition',DateTime(2019,2,29));
-  var galeryKaras = Event(000,'Photo Studio',DateTime(2019,10,6));
-  var act = Events();
-  act.myAdd(kurazhBazar);
-  act.myAdd(galeryKaras);
-  for (var i in act.mySortList(false, 1, 2)){
-    print(i.id);
-  }
-  test("test for myAdd",(){
-    var artCentre = Event(123,'Gallery',DateTime(2019,5,12));
-    act.myAdd(artCentre);
-    bool a = false;
-    for (var i in act.eventsList){
-      if (i == artCentre){
-        a = true;
-      }
+  getListActions(bool ask,num offset,num limit){
+    List res = sortir(acts);
+    if (ask == true){
+      return res.getRange(offset,offset + limit);
+    } else {
+      return res.reversed.toList().getRange(offset,offset + limit);
     }
-    expect(true,a);
-  });
-  test("test for myTotal",(){
-    expect(act.eventsList.length,act.myTotal());
-  });
-  test("test for mySortList",(){
-    List a = [];
-    expect(a,act.mySortList(true, 0, 0));
-  });
-  test("test for myReturnById",(){
-   var buhtaFoodStation = Event(991,'Food',DateTime(2019,7,10));
-   act.myAdd(buhtaFoodStation);
-   bool a = false;
-   for(var i in act.eventsList){
-     if (i.id == buhtaFoodStation.id){
-       a = true;
+  }
+  getListFromTo(bool ask,DateTime starttime,DateTime endtime){
+    DateTime current = starttime;
+    if (ask == true){
+      List res = [];
+
+      for (var i in singleActs.where((i) => i.startTime.isAfter(current) & i.startTime.isBefore(endtime))){
+        res.add(i);
+      };
+      for (var object in everyDayActs){
+
+        if (object.startTime.isBefore(current)){
+          int k = 0;
+
+          while(k < everyDayActs.length){
+            DateTime i = current;
+            while(i.isBefore(endtime)){
+              var a = Action(everyDayActs[k].name,everyDayActs[k].id,everyDayActs[k].description,everyDayActs[k].daysCounter,i);
+              res.add(a);
+              i = i.add(new Duration(days:1));
+ 
+            }
+
+            k += 1;
+          }
+
+        }else if (object.startTime.isAfter(current) & object.startTime.isBefore(endtime)){
+          int k = 0;
+          
+
+          while(k < everyDayActs.length){
+            DateTime i = everyDayActs[k].startTime;
+            while(i.isBefore(endtime)){
+              var a = Action(everyDayActs[k].name,everyDayActs[k].id,everyDayActs[k].description,everyDayActs[k].daysCounter,i);
+              res.add(a);
+              i = i.add(new Duration(days:1));
+            }
+
+            k += 1;
+          }
+        }
       }
+      int k = 0;
+      for (var i in notEveryDayActs){
+        if (i.startTime.isBefore(current)){
+          while(k < notEveryDayActs.length){
+            DateTime i = current;
+            while(i.isBefore(endtime)){
+              var diff = i.difference(notEveryDayActs[k].startTime);
+
+              if (diff.inDays % notEveryDayActs[k].daysCounter == 0){
+                var a = Action(notEveryDayActs[k].name,notEveryDayActs[k].id,notEveryDayActs[k].description,notEveryDayActs[k].daysCounter,i);
+                res.add(a);
+              }
+
+              i = i.add(new Duration(days:1));
+            }
+
+            k += 1;
+          }
+        }else if (i.startTime.isAfter(current) & i.startTime.isBefore(endtime)){
+          
+      
+          while(k < notEveryDayActs.length){
+            DateTime i = notEveryDayActs[k].startTime;
+            while(i.isBefore(endtime)){
+              var diff = i.difference(notEveryDayActs[k].startTime);
+              if (diff.inDays % notEveryDayActs[k].daysCounter == 0){
+                var a = Action(notEveryDayActs[k].name,notEveryDayActs[k].id,notEveryDayActs[k].description,notEveryDayActs[k].daysCounter,i);
+                res.add(a);
+              }
+              i = i.add(new Duration(days:1));
+            }
+            k += 1;
+          }
+        }
+      }
+      return sortir(res);
+  }
+
+  Action getActionById(int someId){
+    return acts.firstWhere((i) => i.id == someId);
+  }
+
+  void delActionById(int someId){
+    var actionIndex = acts.lastIndexWhere((i) => i.id == someId);
+    acts.removeAt(actionIndex);
+  }
+  show(someacts){
+    List res = [];
+    for (var object in someacts){
+      res.add(object.startTime);
+      res.add(object.name);
     }
-  expect(true,a); 
-  });
+    print(res);
+  }
+}}
+
+void main(){
+  //var fue = Action('Festival ulichoi edi',122,'tasty',1,DateTime(2019,7,05));
+  var buhta = Action('BoohtaFoodStation',991,'supertasty',0,DateTime(2019,6,30));
+  var dr = Action('my dr',992,'cool',7,DateTime(2019,6,20));
+  var bodich = Action('Bodich',993,'super cool',2,DateTime(2019,6,25));
+
+  var festi = Actions();
+  festi.addAction(bodich);
+  festi.addAction(buhta);
+  festi.addAction(dr);
+  //festi.addAction(fue);
+  int sum = 0;
+  for (var object in festi.getListFromTo(true,DateTime(2019,6,15),DateTime(2019,6,30))){
+    print(object.startTime);
+    print(object.name);
+    sum += 1;
+  }
+  print(sum);
 }
